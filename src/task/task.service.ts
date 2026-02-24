@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Repository, Brackets } from 'typeorm';
 import { Task } from './entities/task.entity';
 import { TaskResponsible } from './entities/task-responsible.entity';
 import { User } from 'src/user/entities/user.entity';
@@ -32,6 +32,160 @@ export class TaskService {
   //   return tasks.filter((t) => t.primaryAssignee?.id === user.sub);
   // }
 
+  // async findAll(user: any, search?: string, accountableId?: number) {
+  //   const qb = this.taskRepo
+  //     .createQueryBuilder('task')
+  //     .leftJoinAndSelect('task.primaryAssignee', 'primaryAssignee')
+  //     .leftJoinAndSelect('task.createdBy', 'createdBy')
+  //     .leftJoinAndSelect('task.responsibles', 'responsibles')
+  //     .leftJoinAndSelect('task.consulteds', 'consulteds')
+  //     .leftJoinAndSelect('task.informeds', 'informeds')
+  //     .orderBy('task.id', 'DESC');
+
+  //   // 🔎 SEARCH TITLE
+  //   if (search) {
+  //     qb.andWhere('LOWER(task.title) LIKE :search', {
+  //       search: `%${search.toLowerCase()}%`,
+  //     });
+  //   }
+
+  //   // 👤 FILTER ACCOUNTABLE
+  //   if (accountableId) {
+  //     qb.andWhere('primaryAssignee.id = :accountableId', {
+  //       accountableId,
+  //     });
+  //   }
+
+  //   const tasks = await qb.getMany();
+
+  //   const shaped = tasks.map((t) => ({
+  //     id: t.id,
+  //     title: t.title,
+  //     description: t.description,
+  //     priority: t.priority,
+  //     status: t.status,
+  //     meetingDate: '-',
+  //     dueDate: t.due_date,
+  //     originalDueDate: t.due_date,
+  //     createdAt: t.created_at,
+  //     createdBy: t.createdBy,
+  //     raci: {
+  //       accountable: t.primaryAssignee,
+  //       responsible: t.responsibles || [],
+  //       consulted: t.consulteds || [],
+  //       informed: t.informeds || [],
+  //     },
+  //     updates: [],
+  //     requiresEvidence: false,
+  //   }));
+
+  //   const userId = user.userId ?? user.id ?? user.sub;
+
+  //   // 🔐 ROLE FILTERING
+  //   if (user.role === 'SECRETARY') {
+  //     return shaped;
+  //   }
+  //   console.log('USER OBJECT:', user);
+
+  //   return shaped.filter(
+  //     (t) =>
+  //       t.raci.accountable?.id === userId ||
+  //       t.raci.responsible?.some((r) => r.id === userId),
+  //   );
+  //   // const tasks = await this.taskRepo.find({
+  //   //   relations: [
+  //   //     'primaryAssignee',
+  //   //     'createdBy',
+  //   //     'responsibles',
+  //   //     'consulteds',
+  //   //     'informeds',
+  //   //   ],
+  //   //   select: {
+  //   //     id: true,
+  //   //     title: true,
+  //   //     description: true,
+  //   //     priority: true,
+  //   //     status: true,
+  //   //     due_date: true,
+  //   //     created_at: true,
+
+  //   //     primaryAssignee: {
+  //   //       id: true,
+  //   //       username: true,
+  //   //       name: true,
+  //   //       role: true,
+  //   //       avatar_seed: true,
+  //   //     },
+
+  //   //     createdBy: {
+  //   //       id: true,
+  //   //       username: true,
+  //   //       name: true,
+  //   //       role: true,
+  //   //       avatar_seed: true,
+  //   //     },
+
+  //   //     responsibles: {
+  //   //       id: true,
+  //   //       username: true,
+  //   //       name: true,
+  //   //       role: true,
+  //   //       avatar_seed: true,
+  //   //     },
+
+  //   //     consulteds: {
+  //   //       id: true,
+  //   //       username: true,
+  //   //       name: true,
+  //   //       role: true,
+  //   //       avatar_seed: true,
+  //   //     },
+
+  //   //     informeds: {
+  //   //       id: true,
+  //   //       username: true,
+  //   //       name: true,
+  //   //       role: true,
+  //   //       avatar_seed: true,
+  //   //     },
+  //   //   },
+  //   //   order: { id: 'DESC' },
+  //   // });
+
+  //   // const shaped = tasks.map((t) => ({
+  //   //   id: t.id.toString(),
+  //   //   title: t.title,
+  //   //   description: t.description,
+  //   //   priority: t.priority,
+  //   //   status: t.status,
+  //   //   meetingDate: '-', // kalau belum ada field
+  //   //   dueDate: t.due_date,
+  //   //   originalDueDate: t.due_date,
+  //   //   createdAt: t.created_at,
+  //   //   createdBy: t.createdBy,
+
+  //   //   raci: {
+  //   //     accountable: t.primaryAssignee,
+  //   //     responsible: t.responsibles || [],
+  //   //     consulted: t.consulteds || [],
+  //   //     informed: t.informeds || [],
+  //   //   },
+
+  //   //   updates: [],
+  //   //   requiresEvidence: false,
+  //   // }));
+
+  //   // if (user.role === 'SECRETARY') {
+  //   //   return shaped;
+  //   // }
+
+  //   // return shaped.filter(
+  //   //   (t) =>
+  //   //     t.raci.accountable?.id === user.sub ||
+  //   //     t.raci.responsible?.some((r) => r.id === user.sub),
+  //   // );
+  // }
+
   async findAll(user: any, search?: string, accountableId?: number) {
     const qb = this.taskRepo
       .createQueryBuilder('task')
@@ -42,23 +196,30 @@ export class TaskService {
       .leftJoinAndSelect('task.informeds', 'informeds')
       .orderBy('task.id', 'DESC');
 
-    // 🔎 SEARCH TITLE
+    // 🔎 SEARCH
     if (search) {
       qb.andWhere('LOWER(task.title) LIKE :search', {
         search: `%${search.toLowerCase()}%`,
       });
     }
 
-    // 👤 FILTER ACCOUNTABLE
+    // 👤 FILTER ACCOUNTABLE (manual filter dari query param)
     if (accountableId) {
       qb.andWhere('primaryAssignee.id = :accountableId', {
         accountableId,
       });
     }
 
+    const userId = user.userId ?? user.id ?? user.sub;
+
+    // 🔐 ROLE FILTERING
+    if (user.role !== 'SECRETARY') {
+      qb.andWhere('primaryAssignee.id = :userId', { userId });
+    }
+
     const tasks = await qb.getMany();
 
-    const shaped = tasks.map((t) => ({
+    return tasks.map((t) => ({
       id: t.id,
       title: t.title,
       description: t.description,
@@ -78,109 +239,6 @@ export class TaskService {
       updates: [],
       requiresEvidence: false,
     }));
-
-    // 🔐 ROLE FILTERING
-    if (user.role === 'SECRETARY') {
-      return shaped;
-    }
-
-    return shaped.filter(
-      (t) =>
-        t.raci.accountable?.id === user.sub ||
-        t.raci.responsible?.some((r) => r.id === user.sub),
-    );
-    // const tasks = await this.taskRepo.find({
-    //   relations: [
-    //     'primaryAssignee',
-    //     'createdBy',
-    //     'responsibles',
-    //     'consulteds',
-    //     'informeds',
-    //   ],
-    //   select: {
-    //     id: true,
-    //     title: true,
-    //     description: true,
-    //     priority: true,
-    //     status: true,
-    //     due_date: true,
-    //     created_at: true,
-
-    //     primaryAssignee: {
-    //       id: true,
-    //       username: true,
-    //       name: true,
-    //       role: true,
-    //       avatar_seed: true,
-    //     },
-
-    //     createdBy: {
-    //       id: true,
-    //       username: true,
-    //       name: true,
-    //       role: true,
-    //       avatar_seed: true,
-    //     },
-
-    //     responsibles: {
-    //       id: true,
-    //       username: true,
-    //       name: true,
-    //       role: true,
-    //       avatar_seed: true,
-    //     },
-
-    //     consulteds: {
-    //       id: true,
-    //       username: true,
-    //       name: true,
-    //       role: true,
-    //       avatar_seed: true,
-    //     },
-
-    //     informeds: {
-    //       id: true,
-    //       username: true,
-    //       name: true,
-    //       role: true,
-    //       avatar_seed: true,
-    //     },
-    //   },
-    //   order: { id: 'DESC' },
-    // });
-
-    // const shaped = tasks.map((t) => ({
-    //   id: t.id.toString(),
-    //   title: t.title,
-    //   description: t.description,
-    //   priority: t.priority,
-    //   status: t.status,
-    //   meetingDate: '-', // kalau belum ada field
-    //   dueDate: t.due_date,
-    //   originalDueDate: t.due_date,
-    //   createdAt: t.created_at,
-    //   createdBy: t.createdBy,
-
-    //   raci: {
-    //     accountable: t.primaryAssignee,
-    //     responsible: t.responsibles || [],
-    //     consulted: t.consulteds || [],
-    //     informed: t.informeds || [],
-    //   },
-
-    //   updates: [],
-    //   requiresEvidence: false,
-    // }));
-
-    // if (user.role === 'SECRETARY') {
-    //   return shaped;
-    // }
-
-    // return shaped.filter(
-    //   (t) =>
-    //     t.raci.accountable?.id === user.sub ||
-    //     t.raci.responsible?.some((r) => r.id === user.sub),
-    // );
   }
 
   // async bulkCreate(tasks: any[]) {
