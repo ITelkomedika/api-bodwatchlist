@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository, Brackets } from 'typeorm';
 import { Task } from './entities/task.entity';
@@ -370,22 +370,33 @@ export class TaskService {
   }
 
   async updateRaci(id: number, accountableId: number) {
-    const task = await this.taskRepo.findOne({
+    const user = await this.userRepo.findOneBy({ id: accountableId });
+    if (!user) throw new NotFoundException('User not found');
+
+    await this.taskRepo.update(id, {
+      primaryAssignee: user,
+    });
+
+    return this.taskRepo.findOne({
       where: { id },
       relations: ['primaryAssignee'],
     });
+    // const task = await this.taskRepo.findOne({
+    //   where: { id },
+    //   relations: ['primaryAssignee'],
+    // });
 
-    if (!task) throw new Error('Task not found');
+    // if (!task) throw new Error('Task not found');
 
-    const newUser = await this.userRepo.findOneBy({
-      id: accountableId,
-    });
+    // const newUser = await this.userRepo.findOneBy({
+    //   id: accountableId,
+    // });
 
-    if (!newUser) throw new Error('User not found');
+    // if (!newUser) throw new Error('User not found');
 
-    task.primaryAssignee = newUser;
+    // task.primaryAssignee = newUser;
 
-    return this.taskRepo.save(task);
+    // return this.taskRepo.save(task);
   }
 
   async addUpdate(

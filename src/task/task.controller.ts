@@ -8,6 +8,7 @@ import {
   Patch,
   Param,
   Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -42,7 +43,7 @@ export class TaskController {
 
   @Patch(':id/raci')
   async updateRaci(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() body: { accountableId: number },
   ) {
     return this.taskService.updateRaci(id, body.accountableId);
