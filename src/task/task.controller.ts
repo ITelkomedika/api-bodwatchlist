@@ -46,8 +46,9 @@ export class TaskController {
   async updateRaci(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { accountableId: number },
+    @Req() req: any,
   ) {
-    return this.taskService.updateRaci(id, body.accountableId);
+    return this.taskService.updateRaci(id, body.accountableId, req.user);
   }
 
   @Post(':id/updates')

@@ -74,14 +74,19 @@ export class TaskService {
         consulted: t.consulteds || [],
         informed: t.informeds || [],
       },
-      updates:
-        t.updates?.map((u) => ({
+      updates: (t.updates ?? [])
+        .slice() // clone supaya aman
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        )
+        .map((u) => ({
           id: u.id,
           content: u.content,
           date: u.created_at,
           evidenceFileName: u.evidence_path,
           user: u.user,
-        })) || [],
+        })),
       requiresEvidence: false,
     }));
   }
@@ -158,34 +163,48 @@ export class TaskService {
     return this.taskRepo.save(task);
   }
 
-  async updateRaci(id: number, accountableId: number) {
-    const user = await this.userRepo.findOneBy({ id: accountableId });
-    if (!user) throw new NotFoundException('User not found');
-
-    await this.taskRepo.update(id, {
-      primaryAssignee: user,
-    });
-
-    return this.taskRepo.findOne({
+  async updateRaci(id: number, accountableId: number, currentUser: any) {
+    const task = await this.taskRepo.findOne({
       where: { id },
       relations: ['primaryAssignee'],
     });
-    // const task = await this.taskRepo.findOne({
-    //   where: { id },
-    //   relations: ['primaryAssignee'],
-    // });
 
-    // if (!task) throw new Error('Task not found');
+    if (!task) throw new NotFoundException('Task not found');
 
-    // const newUser = await this.userRepo.findOneBy({
-    //   id: accountableId,
-    // });
+    const newUser = await this.userRepo.findOneBy({
+      id: accountableId,
+    });
 
-    // if (!newUser) throw new Error('User not found');
+    if (!newUser) throw new NotFoundException('User not found');
 
-    // task.primaryAssignee = newUser;
+    const oldUser = task.primaryAssignee;
 
-    // return this.taskRepo.save(task);
+    // Update accountable
+    task.primaryAssignee = newUser;
+    await this.taskRepo.save(task);
+
+    // 🔥 Ambil actor
+    const actorId = currentUser.userId ?? currentUser.id ?? currentUser.sub;
+
+    const actor = await this.userRepo.findOneBy({ id: actorId });
+
+    if (!actor) {
+      throw new NotFoundException('Actor not found');
+    }
+
+    // 🔥 Sekarang TypeScript aman
+    const updateLog = this.taskUpdateRepo.create({
+      task: task,
+      user: actor,
+      content: `🔄 Accountable diubah dari ${oldUser.name} menjadi ${newUser.name}`,
+    });
+
+    await this.taskUpdateRepo.save(updateLog);
+
+    return this.taskRepo.findOne({
+      where: { id },
+      relations: ['primaryAssignee', 'updates', 'updates.user'],
+    });
   }
 
   async addUpdate(taskId: number, userId: number, dto: CreateTaskUpdateDto) {
