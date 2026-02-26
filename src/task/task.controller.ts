@@ -13,6 +13,7 @@ import {
 import { TaskService } from './task.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { CreateTaskUpdateDto } from './dto/task-update-dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('tasks')
@@ -51,15 +52,18 @@ export class TaskController {
 
   @Post(':id/updates')
   async addUpdate(
-    @Param('id') id: number,
-    @Body() body: { content: string; mentions?: number[] },
-    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) taskId: number,
+    @Body() dto: CreateTaskUpdateDto,
+    @Req() req: any,
   ) {
-    return this.taskService.addUpdate(
-      id,
-      body.content,
-      user,
-      body.mentions || [],
-    );
+    const userId = req.user.id;
+
+    return this.taskService.addUpdate(taskId, userId, dto);
+    // return this.taskService.addUpdate(
+    //   id,
+    //   body.content,
+    //   user,
+    //   body.mentions || [],
+    // );
   }
 }

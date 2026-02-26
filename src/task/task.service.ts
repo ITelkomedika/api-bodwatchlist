@@ -4,6 +4,8 @@ import { DataSource, Repository, Brackets } from 'typeorm';
 import { Task } from './entities/task.entity';
 import { TaskResponsible } from './entities/task-responsible.entity';
 import { User } from 'src/user/entities/user.entity';
+import { TaskUpdate } from './entities/task-update.entity';
+import { CreateTaskUpdateDto } from './dto/task-update-dto';
 
 @Injectable()
 export class TaskService {
@@ -13,6 +15,8 @@ export class TaskService {
     private readonly taskRepo: Repository<Task>,
     @InjectRepository(TaskResponsible)
     private readonly mentionRepo: Repository<TaskResponsible>,
+    @InjectRepository(TaskUpdate)
+    private readonly taskUpdateRepo: Repository<TaskUpdate>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
   ) {}
@@ -399,36 +403,38 @@ export class TaskService {
     // return this.taskRepo.save(task);
   }
 
-  async addUpdate(
-    taskId: number,
-    content: string,
-    user: any,
-    mentions: number[],
-  ) {
-    const task = await this.taskRepo.findOneBy({ id: taskId });
-    if (!task) throw new Error('Task not found');
-
-    const update = {
+  async addUpdate(taskId: number, userId: number, dto: CreateTaskUpdateDto) {
+    const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('User not found');
+    const update = this.taskUpdateRepo.create({
       task_id: taskId,
-      user_id: user.sub,
-      content,
-    };
+      user_id: user.id,
+      content: dto.content,
+      evidence_path: dto.evidence || null,
+      suggested_status: dto.status || null,
+    });
 
-    await this.dataSource
-      .createQueryBuilder()
-      .insert()
-      .into('task_updates')
-      .values(update)
-      .execute();
-
-    // Simpan mention jika ada
-    for (const m of mentions) {
-      await this.mentionRepo.save({
-        task_id: taskId,
-        user_id: m,
-      });
-    }
-
-    return { message: 'Update added successfully' };
+    return this.taskUpdateRepo.save(update);
+    // const task = await this.taskRepo.findOneBy({ id: taskId });
+    // if (!task) throw new Error('Task not found');
+    // const update = {
+    //   task_id: taskId,
+    //   user_id: user.sub,
+    //   content,
+    // };
+    // await this.dataSource
+    //   .createQueryBuilder()
+    //   .insert()
+    //   .into('task_updates')
+    //   .values(update)
+    //   .execute();
+    // // Simpan mention jika ada
+    // for (const m of mentions) {
+    //   await this.mentionRepo.save({
+    //     task_id: taskId,
+    //     user_id: m,
+    //   });
+    // }
+    // return { message: 'Update added successfully' };
   }
 }
