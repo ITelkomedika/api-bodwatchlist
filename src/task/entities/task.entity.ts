@@ -7,8 +7,10 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { TaskUpdate } from './task-update.entity';
 
 @Entity('tasks')
 export class Task {
@@ -60,6 +62,14 @@ export class Task {
     inverseJoinColumn: { name: 'user_id', referencedColumnName: 'id' },
   })
   informeds: User[];
+
+  // =============================
+  // UPDATES (🔥 RELATION BARU)
+  // =============================
+  @OneToMany(() => TaskUpdate, (update) => update.task, {
+    cascade: true,
+  })
+  updates: TaskUpdate[];
 
   // =============================
   // OTHER FIELDS
