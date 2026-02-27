@@ -10,7 +10,6 @@ import { TaskResponsible } from './entities/task-responsible.entity';
 import { User } from 'src/user/entities/user.entity';
 import { TaskUpdate } from './entities/task-update.entity';
 import { CreateTaskUpdateDto } from './dto/task-update-dto';
-import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
 
 @Injectable()
 export class TaskService {
@@ -24,7 +23,6 @@ export class TaskService {
     private readonly taskUpdateRepo: Repository<TaskUpdate>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async findAll(user: any, search?: string, accountableId?: number) {
@@ -89,8 +87,8 @@ export class TaskService {
         .map((u) => ({
           id: u.id,
           content: u.content,
-          date: u.created_at,
-          evidenceFileName: u.evidence_path,
+          created_at: u.created_at, // ✅ konsisten
+          evidence_path: u.evidence_path, // ✅ konsisten
           user: u.user,
         })),
       requiresEvidence: false,
