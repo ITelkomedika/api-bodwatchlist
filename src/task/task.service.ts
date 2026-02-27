@@ -1,11 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, Brackets } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Task } from './entities/task.entity';
 import { TaskResponsible } from './entities/task-responsible.entity';
 import { User } from 'src/user/entities/user.entity';
 import { TaskUpdate } from './entities/task-update.entity';
 import { CreateTaskUpdateDto } from './dto/task-update-dto';
+import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
 
 @Injectable()
 export class TaskService {
@@ -19,6 +24,7 @@ export class TaskService {
     private readonly taskUpdateRepo: Repository<TaskUpdate>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async findAll(user: any, search?: string, accountableId?: number) {
@@ -208,15 +214,25 @@ export class TaskService {
   }
 
   async addUpdate(taskId: number, userId: number, dto: CreateTaskUpdateDto) {
+    // =============================
+    // 1️⃣ VALIDATE TASK
+    // =============================
     const task = await this.taskRepo.findOneBy({ id: taskId });
     if (!task) throw new Error('Task not found');
+
+    // =============================
+    // 2️⃣ VALIDATE USER
+    // =============================
     const user = await this.userRepo.findOneBy({ id: userId });
     if (!user) throw new NotFoundException('User not found');
+    // =============================
+    // 4️⃣ CREATE UPDATE ENTITY
+    // =============================
     const update = this.taskUpdateRepo.create({
       task,
       user,
       content: dto.content,
-      evidence_path: dto.evidence || null,
+      evidence_path: dto.evidence ?? null,
       suggested_status: dto.status || null,
     });
 

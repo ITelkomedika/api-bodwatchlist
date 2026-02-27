@@ -13,5 +13,6 @@ export class CreateTaskUpdateDto {
   mentions?: number[];
 
   @IsOptional()
+  @IsString()
   evidence?: string; // path file
 }

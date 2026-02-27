@@ -60,11 +60,5 @@ export class TaskController {
     const userId = req.user.id;
 
     return this.taskService.addUpdate(taskId, userId, dto);
-    // return this.taskService.addUpdate(
-    //   id,
-    //   body.content,
-    //   user,
-    //   body.mentions || [],
-    // );
   }
 }
